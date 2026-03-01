@@ -1,6 +1,29 @@
+import { useState } from "react";
+import TripForm from "./components/TripForm";
+import type { TripRequest, TripResult } from "./types/trip";
+import { planTrip } from "./services/api";
 import "./App.css";
 
 function App() {
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<TripResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handlePlanTrip(data: TripRequest) {
+    setLoading(true);
+    setError(null);
+    setResult(null);
+
+    try {
+      const tripResult = await planTrip(data);
+      setResult(tripResult);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="app">
       <header className="app-header">
@@ -8,7 +31,19 @@ function App() {
         <p>Plan your route with HOS-compliant stops and ELD logs</p>
       </header>
       <main className="app-main">
-        <p>Trip form and map coming soon.</p>
+        <aside className="app-sidebar">
+          <TripForm onSubmit={handlePlanTrip} loading={loading} />
+          {error && <div className="app-error">{error}</div>}
+        </aside>
+        <section className="app-content">
+          {result ? (
+            <p>Trip result will render here.</p>
+          ) : (
+            <div className="app-placeholder">
+              Enter trip details and click "Plan Trip" to see your route.
+            </div>
+          )}
+        </section>
       </main>
     </div>
   );

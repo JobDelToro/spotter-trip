@@ -1,0 +1,65 @@
+.location-input {
+  position: relative;
+}
+
+.location-input__label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.35rem;
+}
+
+.location-input__field {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background: #fff;
+  color: #1a1a2e;
+  transition: border-color 0.15s;
+}
+
+.location-input__field:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+}
+
+.location-input__field--selected {
+  border-color: #10b981;
+  background: #f0fdf4;
+}
+
+.location-input__dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 2px;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  list-style: none;
+  z-index: 100;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.location-input__option {
+  padding: 0.55rem 0.75rem;
+  font-size: 0.85rem;
+  color: #374151;
+  cursor: pointer;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.location-input__option:last-child {
+  border-bottom: none;
+}
+
+.location-input__option:hover {
+  background: #eff6ff;
+}

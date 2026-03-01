@@ -4,7 +4,7 @@ export async function searchLocations(query: string): Promise<
   { display_name: string; lat: number; lon: number }[]
 > {
   const res = await fetch(
-    `${API_BASE}/locations/search?q=${encodeURIComponent(query)}`
+    `${API_BASE}/locations/search/?q=${encodeURIComponent(query)}`
   );
   if (!res.ok) return [];
   return res.json();
@@ -16,7 +16,7 @@ export async function planTrip(data: {
   dropoff_location: string;
   current_cycle_hours: number;
 }) {
-  const res = await fetch(`${API_BASE}/trip/plan`, {
+  const res = await fetch(`${API_BASE}/trip/plan/`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
