@@ -4,7 +4,9 @@ from rest_framework import status
 
 from trips.serializers import TripRequestSerializer
 from trips.services.geocoding import search_locations
-from trips.services.routing import get_route
+from trips.services.routing import get_route, get_point_along_route
+from trips.services.hos import calculate_trip_plan
+from trips.services.eld import generate_eld_logs
 
 
 def parse_coords(value: str) -> tuple[float, float]:
@@ -41,7 +43,26 @@ class PlanTripView(APIView):
                 status=status.HTTP_502_BAD_GATEWAY,
             )
 
-        # TODO: HOS calculation and ELD log generation in next commits
+        cycle_hours = data.get("current_cycle_hours", 0)
+
+        try:
+            plan = calculate_trip_plan(route["legs"], cycle_hours)
+        except Exception as e:
+            return Response(
+                {"detail": f"HOS calculation error: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        # Add lat/lon to each stop using route geometry
+        for stop in plan["stops"]:
+            point = get_point_along_route(
+                route["geometry"], stop.get("mile_marker", 0)
+            )
+            if point:
+                stop["location"] = {"lat": point[0], "lon": point[1]}
+
+        eld_logs = generate_eld_logs(plan["timeline"])
+
         return Response({
             "route": {
                 "total_distance_miles": route["total_distance_miles"],
@@ -49,8 +70,9 @@ class PlanTripView(APIView):
                 "geometry": route["geometry"],
                 "legs": route["legs"],
             },
-            "stops": [],
-            "eld_logs": [],
+            "stops": plan["stops"],
+            "eld_logs": eld_logs,
+            "summary": plan["summary"],
         })
 
 
