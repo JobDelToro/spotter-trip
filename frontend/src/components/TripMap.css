@@ -1,0 +1,12 @@
+.trip-map {
+  height: 500px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.stop-marker {
+  background: transparent !important;
+  border: none !important;
+}

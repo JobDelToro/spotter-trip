@@ -34,13 +34,20 @@ export interface ELDLog {
 }
 
 export interface Stop {
-  type: "start" | "pickup" | "dropoff" | "fuel" | "rest" | "overnight";
-  location: string;
-  lat: number;
-  lon: number;
-  arrival_time: string;
-  departure_time: string;
+  type: "pickup" | "dropoff" | "fuel" | "rest" | "overnight";
   duration_hours: number;
+  start_time: string;
+  end_time: string;
+  mile_marker: number;
+  location?: { lat: number; lon: number };
+}
+
+export interface TripSummary {
+  total_distance_miles: number;
+  total_driving_hours: number;
+  total_trip_hours: number;
+  number_of_stops: number;
+  number_of_rest_periods: number;
 }
 
 export interface TripResult {
@@ -48,7 +55,9 @@ export interface TripResult {
     total_distance_miles: number;
     total_duration_hours: number;
     geometry: [number, number][];
+    legs: { distance_miles: number; duration_hours: number }[];
   };
   stops: Stop[];
   eld_logs: ELDLog[];
+  summary: TripSummary;
 }

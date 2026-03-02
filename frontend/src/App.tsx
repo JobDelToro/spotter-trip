@@ -1,5 +1,7 @@
 import { useState } from "react";
 import TripForm from "./components/TripForm";
+import TripMap from "./components/TripMap";
+import TripSummary from "./components/TripSummary";
 import type { TripRequest, TripResult } from "./types/trip";
 import { planTrip } from "./services/api";
 import "./App.css";
@@ -37,7 +39,10 @@ function App() {
         </aside>
         <section className="app-content">
           {result ? (
-            <p>Trip result will render here.</p>
+            <>
+              <TripMap trip={result} />
+              <TripSummary trip={result} />
+            </>
           ) : (
             <div className="app-placeholder">
               Enter trip details and click "Plan Trip" to see your route.

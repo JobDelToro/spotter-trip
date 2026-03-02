@@ -1,0 +1,95 @@
+.trip-summary {
+  margin-top: 1rem;
+}
+
+.summary-stats {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+}
+
+.stat {
+  flex: 1;
+  text-align: center;
+}
+
+.stat-value {
+  display: block;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.stops-list {
+  margin-top: 1rem;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 1rem;
+}
+
+.stops-list h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: #1a1a2e;
+}
+
+.stop-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.stop-item:last-child {
+  border-bottom: none;
+}
+
+.stop-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-top: 4px;
+  flex-shrink: 0;
+  background: #6b7280;
+}
+
+.stop-pickup .stop-dot { background: #16a34a; }
+.stop-dropoff .stop-dot { background: #dc2626; }
+.stop-fuel .stop-dot { background: #f59e0b; }
+.stop-rest .stop-dot { background: #6366f1; }
+.stop-overnight .stop-dot { background: #7c3aed; }
+
+.stop-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.stop-type {
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: #1a1a2e;
+}
+
+.stop-time {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.stop-detail {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
