@@ -4,9 +4,16 @@
   overflow: hidden;
   border: 1px solid #e5e7eb;
   background: #f9fafb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .stop-marker {
   background: transparent !important;
   border: none !important;
+}
+
+@media (max-width: 900px) {
+  .trip-map {
+    height: 350px;
+  }
 }
