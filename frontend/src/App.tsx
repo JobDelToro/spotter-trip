@@ -2,6 +2,7 @@ import { useState } from "react";
 import TripForm from "./components/TripForm";
 import TripMap from "./components/TripMap";
 import TripSummary from "./components/TripSummary";
+import ELDLogs from "./components/ELDLogs";
 import type { TripRequest, TripResult } from "./types/trip";
 import { planTrip } from "./services/api";
 import "./App.css";
@@ -42,6 +43,7 @@ function App() {
             <>
               <TripMap trip={result} />
               <TripSummary trip={result} />
+              <ELDLogs logs={result.eld_logs} />
             </>
           ) : (
             <div className="app-placeholder">

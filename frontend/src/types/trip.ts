@@ -15,8 +15,8 @@ export type DutyStatus = "off_duty" | "sleeper_berth" | "driving" | "on_duty";
 
 export interface StatusEntry {
   status: DutyStatus;
-  start_time: string;
-  end_time: string;
+  start_hour: number;
+  end_hour: number;
   duration_hours: number;
   location: string;
 }

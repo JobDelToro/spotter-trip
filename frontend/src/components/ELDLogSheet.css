@@ -1,0 +1,60 @@
+.eld-sheet {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 1rem;
+}
+
+.eld-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.eld-date {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #1a1a2e;
+}
+
+.eld-total {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.eld-grid {
+  width: 100%;
+  height: auto;
+}
+
+.eld-hour-label {
+  font-size: 9px;
+  fill: #9ca3af;
+  font-family: inherit;
+}
+
+.eld-status-label {
+  font-size: 10px;
+  fill: #374151;
+  font-family: inherit;
+}
+
+.eld-hours-total {
+  font-size: 10px;
+  fill: #6b7280;
+  font-family: inherit;
+}
+
+.eld-remarks {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: #6b7280;
+  padding-top: 0.5rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.eld-remarks-label {
+  font-weight: 500;
+  color: #374151;
+}
