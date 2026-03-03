@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from collections import defaultdict
 
 
 STATUS_MAP = {
@@ -81,7 +80,7 @@ def generate_eld_logs(timeline: list[dict]) -> list[dict]:
 
             current = segment_end
 
-    # Fill gaps at start/end of each day with off-duty
+    # Fill gaps in each day with off-duty
     for date, log in logs_by_date.items():
         entries = log["entries"]
         if not entries:
@@ -95,35 +94,44 @@ def generate_eld_logs(timeline: list[dict]) -> list[dict]:
             log["total_hours"]["off_duty"] = 24
             continue
 
-        # Fill from midnight to first entry
-        first = entries[0]
-        if first["start_hour"] > 0:
-            gap_hours = first["start_hour"]
-            entries.insert(0, {
-                "status": "off_duty",
-                "start_hour": 0,
-                "end_hour": first["start_hour"],
-                "duration_hours": round(gap_hours, 2),
-                "location": "",
-            })
-            log["total_hours"]["off_duty"] = round(
-                log["total_hours"]["off_duty"] + gap_hours, 2
-            )
+        # Sort entries by start_hour
+        entries.sort(key=lambda e: e["start_hour"])
+
+        # Fill gaps between consecutive entries and at boundaries
+        filled = []
+        prev_end = 0.0
+
+        for entry in entries:
+            gap = entry["start_hour"] - prev_end
+            if gap > 0.01:
+                filled.append({
+                    "status": "off_duty",
+                    "start_hour": prev_end,
+                    "end_hour": entry["start_hour"],
+                    "duration_hours": round(gap, 2),
+                    "location": "",
+                })
+                log["total_hours"]["off_duty"] = round(
+                    log["total_hours"]["off_duty"] + gap, 2
+                )
+            filled.append(entry)
+            prev_end = entry["end_hour"]
 
         # Fill from last entry to midnight
-        last = entries[-1]
-        if last["end_hour"] < 24:
-            gap_hours = 24 - last["end_hour"]
-            entries.append({
+        if prev_end < 23.99:
+            gap = 24 - prev_end
+            filled.append({
                 "status": "off_duty",
-                "start_hour": last["end_hour"],
+                "start_hour": prev_end,
                 "end_hour": 24,
-                "duration_hours": round(gap_hours, 2),
+                "duration_hours": round(gap, 2),
                 "location": "",
             })
             log["total_hours"]["off_duty"] = round(
-                log["total_hours"]["off_duty"] + gap_hours, 2
+                log["total_hours"]["off_duty"] + gap, 2
             )
+
+        log["entries"] = filled
 
     # Return sorted by date
     return [logs_by_date[d] for d in sorted(logs_by_date.keys())]

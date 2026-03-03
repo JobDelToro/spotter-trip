@@ -47,7 +47,11 @@ def calculate_trip_plan(
     )
 
     # Leg 0: drive to pickup
-    _drive_leg(state, legs[0], timeline, stops, leg_index=0)
+    fuel_miles = _drive_leg(state, legs[0], timeline, stops, mile_offset=0)
+
+    # Before pickup, ensure we have enough duty window for 1h on-duty
+    _ensure_duty_hours(state, PICKUP_DURATION_HOURS, timeline, stops,
+                       mile_offset=legs[0]["distance_miles"])
 
     # Pickup stop
     pickup_stop = {
@@ -60,14 +64,20 @@ def calculate_trip_plan(
     pickup_stop["end_time"] = state.current_time.isoformat()
     stops.append(pickup_stop)
 
-    # Leg 1: drive to dropoff
+    # Leg 1: drive to dropoff (carry over fuel miles from leg 0)
     _drive_leg(
         state,
         legs[1],
         timeline,
         stops,
-        leg_index=1,
         mile_offset=legs[0]["distance_miles"],
+        miles_since_fuel=fuel_miles,
+    )
+
+    # Before dropoff, ensure we have enough duty window for 1h on-duty
+    _ensure_duty_hours(
+        state, DROPOFF_DURATION_HOURS, timeline, stops,
+        mile_offset=legs[0]["distance_miles"] + legs[1]["distance_miles"],
     )
 
     # Dropoff stop
@@ -124,8 +134,17 @@ class DriverState:
         """Hours of driving left in current shift."""
         by_driving_limit = MAX_DRIVING_HOURS - self.shift_driving_hours
         by_window = MAX_DUTY_WINDOW_HOURS - self.shift_duty_hours
-        by_cycle = MAX_CYCLE_HOURS - self.cycle_hours_used
-        return max(0, min(by_driving_limit, by_window, by_cycle))
+        return max(0, min(by_driving_limit, by_window))
+
+    @property
+    def remaining_cycle(self) -> float:
+        """Hours left in the 70-hour/8-day cycle."""
+        return max(0, MAX_CYCLE_HOURS - self.cycle_hours_used)
+
+    @property
+    def remaining_duty_window(self) -> float:
+        """Hours left in the 14-hour duty window."""
+        return max(0, MAX_DUTY_WINDOW_HOURS - self.shift_duty_hours)
 
     @property
     def needs_30min_break(self) -> bool:
@@ -196,28 +215,87 @@ class DriverState:
         self.shift_duty_hours = 0
         self.driving_since_break = 0
 
+    def add_cycle_reset(self, timeline: list, location: str = "34h restart"):
+        """34-hour restart to reset the 70-hour cycle."""
+        restart_hours = 34.0
+        timeline.append({
+            "status": "off_duty",
+            "start_time": self.current_time.isoformat(),
+            "end_time": (
+                self.current_time + timedelta(hours=restart_hours)
+            ).isoformat(),
+            "duration_hours": restart_hours,
+            "location": location,
+        })
+        self.current_time += timedelta(hours=restart_hours)
+        self.cycle_hours_used = 0
+        self.shift_driving_hours = 0
+        self.shift_duty_hours = 0
+        self.driving_since_break = 0
+
+
+def _ensure_duty_hours(
+    state: DriverState,
+    needed_hours: float,
+    timeline: list,
+    stops: list,
+    mile_offset: float,
+):
+    """Take a 10h rest if there aren't enough duty window hours remaining."""
+    if state.remaining_duty_window < needed_hours:
+        stops.append({
+            "type": "overnight",
+            "duration_hours": OFF_DUTY_RESET_HOURS,
+            "start_time": state.current_time.isoformat(),
+            "mile_marker": round(mile_offset, 1),
+        })
+        state.add_rest(timeline, "Overnight rest")
+        stops[-1]["end_time"] = state.current_time.isoformat()
+        # Pre-trip inspection after rest
+        state.add_on_duty(
+            PRE_TRIP_INSPECTION_HOURS, "Pre-trip inspection", timeline
+        )
+
 
 def _drive_leg(
     state: DriverState,
     leg: dict,
     timeline: list,
     stops: list,
-    leg_index: int,
     mile_offset: float = 0,
-):
+    miles_since_fuel: float = 0,
+) -> float:
     """
     Simulate driving a single leg, inserting mandatory stops as needed.
+    Returns miles driven since last fuel stop (for carrying over to next leg).
     """
     remaining_miles = leg["distance_miles"]
     if leg["duration_hours"] > 0:
         avg_speed = leg["distance_miles"] / leg["duration_hours"]
     else:
         avg_speed = 60.0
-    miles_since_fuel = 0.0
     leg_miles_driven = 0.0
+    max_iterations = 200
 
-    while remaining_miles > 0.1:
-        # Check if we need a 10-hour rest first
+    while remaining_miles > 0.1 and max_iterations > 0:
+        max_iterations -= 1
+
+        # Check if 70-hour cycle is exhausted — need 34h restart
+        if state.remaining_cycle <= 0:
+            stops.append({
+                "type": "overnight",
+                "duration_hours": 34.0,
+                "start_time": state.current_time.isoformat(),
+                "mile_marker": round(mile_offset + leg_miles_driven, 1),
+            })
+            state.add_cycle_reset(timeline, "34h restart (cycle reset)")
+            stops[-1]["end_time"] = state.current_time.isoformat()
+            state.add_on_duty(
+                PRE_TRIP_INSPECTION_HOURS, "Pre-trip inspection", timeline
+            )
+            miles_since_fuel = 0
+
+        # Check if we need a 10-hour rest (shift limits)
         if state.remaining_driving <= 0:
             stops.append({
                 "type": "overnight",
@@ -227,10 +305,14 @@ def _drive_leg(
             })
             state.add_rest(timeline, "Overnight rest")
             stops[-1]["end_time"] = state.current_time.isoformat()
+            # Pre-trip inspection after overnight rest
+            state.add_on_duty(
+                PRE_TRIP_INSPECTION_HOURS, "Pre-trip inspection", timeline
+            )
             miles_since_fuel = 0
 
         # Calculate how far we can drive before the next mandatory stop
-        hours_available = state.remaining_driving
+        hours_available = min(state.remaining_driving, state.remaining_cycle)
         hours_until_break = state.hours_until_break
 
         # Find the next limiting factor
@@ -300,3 +382,5 @@ def _drive_leg(
                 "end_time": state.current_time.isoformat(),
                 "mile_marker": round(mile_offset + leg_miles_driven, 1),
             })
+
+    return miles_since_fuel
