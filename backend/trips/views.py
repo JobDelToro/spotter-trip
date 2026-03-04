@@ -84,5 +84,11 @@ class LocationSearchView(APIView):
         if len(query) < 3:
             return Response([])
 
-        results = search_locations(query)
+        try:
+            results = search_locations(query)
+        except Exception as e:
+            return Response(
+                {"detail": f"Geocoding error: {str(e)}"},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
         return Response(results)
