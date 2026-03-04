@@ -65,10 +65,6 @@ export default function TripMap({ trip }: Props) {
   const { route, stops } = trip;
   const positions = route.geometry as [number, number][];
 
-  // Center on midpoint of route
-  const midIdx = Math.floor(positions.length / 2);
-  const center = positions[midIdx] || positions[0];
-
   // Compute bounds for auto-fit
   const bounds = L.latLngBounds(positions.map(([lat, lon]) => [lat, lon]));
 

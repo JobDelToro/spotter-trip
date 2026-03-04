@@ -20,7 +20,6 @@ const GRID_RIGHT = 690;
 const GRID_WIDTH = GRID_RIGHT - GRID_LEFT;
 const ROW_HEIGHT = 28;
 const GRID_TOP = 30;
-const HOUR_WIDTH = GRID_WIDTH / 24;
 
 function hourToX(hour: number): number {
   return GRID_LEFT + (hour / 24) * GRID_WIDTH;
